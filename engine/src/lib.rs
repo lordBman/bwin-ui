@@ -149,8 +149,8 @@ extern "system" fn wndproc(window: HWND, message: u32, wparam: WPARAM, lparam: L
                         
                         // Get app data to use the font
                         if let Some(app_data_ptr) = APP_DATA {
-                            let app_data = &**app_data_ptr;
-                            SelectObject(hdc, HGDIOBJ(app_data.text_font.0));
+                            let app_data = *app_data_ptr;
+                            SelectObject(hdc, HGDIOBJ(app_data.font.0));
                         }
                         
                         return LRESULT(GetStockObject(NULL_BRUSH).0 as isize);
