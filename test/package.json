@@ -1,0 +1,13 @@
+{
+  "name": "@bwin-ui/test",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest",
+    "bwin-ui": "file:../lib"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}

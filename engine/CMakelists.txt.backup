@@ -1,0 +1,107 @@
+cmake_minimum_required(VERSION 3.15...3.31)
+cmake_policy(SET CMP0091 NEW)
+cmake_policy(SET CMP0042 NEW)
+
+project(engine VERSION 1.0.0 LANGUAGES CXX)
+set(CMAKE_CXX_STANDARD 20)
+
+add_definitions(-DNAPI_VERSION=9)
+
+file(GLOB SOURCE_FILES "src/cpp/*")
+include_directories(${CMAKE_JS_INC} "src/cpp")
+
+add_subdirectory("wxWidget")
+include(${wxWidgets_USE_FILE})
+find_package(wxWidgets COMPONENTS wx::net wx::core wx::base REQUIRED)
+target_link_libraries(wxWidgets PRIVATE ${wxWidgets_LIBRARIES})
+
+add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${CMAKE_JS_SRC})
+set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "" SUFFIX ".node")
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_JS_INC})
+target_link_libraries(${PROJECT_NAME} PRIVATE ${CMAKE_JS_LIB})
+target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
+
+# add wxWidgets
+#set(wxWidgets_ROOT_DIR "./wxWidgets")
+#find_package(wxWidgets COMPONENTS net core base REQUIRED)
+#include(${wxWidgets_USE_FILE})
+#target_link_libraries(wxWidgets PRIVATE ${wxWidgets_LIBRARIES})
+
+# Platform-specific settings
+if(WIN32)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE
+        BUILDING_NODE_EXTENSION
+        NAPI_VERSION=9
+        NAPI_DISABLE_CPP_EXCEPTIONS
+        _UNICODE
+        UNICODE
+        __WXMSW__
+        WXUSINGDLL
+        _WINDOWS
+        WIN32
+    )
+    
+    # Windows-specific linker options
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+        PREFIX ""
+        SUFFIX ".node"
+    )
+    
+    target_link_libraries(${PROJECT_NAME} PRIVATE
+        comctl32
+        rpcrt4
+        winmm
+        shell32
+        ole32
+        oleaut32
+        uuid
+        advapi32
+        gdi32
+        user32
+        kernel32
+    )
+    
+elseif(APPLE)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE
+        BUILDING_NODE_EXTENSION
+        NAPI_VERSION=9
+        NAPI_DISABLE_CPP_EXCEPTIONS
+        __WXOSX_COCOA__
+        __WXMAC__
+    )
+    
+    # macOS frameworks
+    target_link_libraries(${PROJECT_NAME} PRIVATE
+        "-framework Cocoa"
+        "-framework IOKit"
+        "-framework Carbon"
+        "-framework Security"
+        "-framework SystemConfiguration"
+    )
+    
+else()  # Linux
+    target_compile_definitions(${PROJECT_NAME} PRIVATE
+        BUILDING_NODE_EXTENSION
+        NAPI_VERSION=9
+        NAPI_DISABLE_CPP_EXCEPTIONS
+        __WXGTK__
+        __WXGTK3__
+    )
+    
+    target_link_options(${PROJECT_NAME} PRIVATE
+        "-Wl,--no-undefined"
+        "-Wl,--no-allow-shlib-undefined"
+    )
+endif()
+
+
+if(MSVC AND CMAKE_JS_NODELIB_DEF AND CMAKE_JS_NODELIB_TARGET)
+  # Generate node.lib
+  execute_process(COMMAND ${CMAKE_AR} /def:${CMAKE_JS_NODELIB_DEF} /out:${CMAKE_JS_NODELIB_TARGET} ${CMAKE_STATIC_LINKER_FLAGS})
+endif()
+
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+    $<TARGET_FILE:${PROJECT_NAME}>
+    ${CMAKE_SOURCE_DIR}/build/${PROJECT_NAME}.node
+)

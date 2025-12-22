@@ -1,0 +1,29 @@
+{
+  "name": "@bwin-ui/engine",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build:ts": "tsc",
+    "prebuild": "npm run clean",
+    "compile": "cmake-js compile"
+  },
+  "binary": {
+    "napi_versions": [
+        9
+    ]
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/node": "^25.0.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "cmake-js": "^7.4.0",
+    "node-addon-api": "^8.5.0"
+  }
+}
